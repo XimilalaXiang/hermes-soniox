@@ -152,3 +152,12 @@ def test_transport_error_redacted(mod, monkeypatch, tmp_path):
     with pytest.raises(Exception) as ei:
         _provider(mod, h, monkeypatch).synthesize("x", str(tmp_path / "a.mp3"))
     assert FAKE_KEY not in str(ei.value)
+
+
+def test_non_ascii_key_error_does_not_echo_key(mod, monkeypatch, tmp_path):
+    secret = "kéy-secret"
+    monkeypatch.setenv("SONIOX_API_KEY", secret)
+    h, _ = _capture()
+    with pytest.raises(mod.client.SonioxError) as ei:
+        _provider(mod, h, monkeypatch).synthesize("hi", str(tmp_path / "o.mp3"))
+    assert secret not in str(ei.value) and "invalid API key characters" in str(ei.value)

@@ -122,10 +122,11 @@ def test_poll_timeout_cleans_up(mod, monkeypatch, audio):
     assert 2 < f.calls.count(f"GET /v1/transcriptions/{TID}") < 15  # backoff, bounded
 
 
-def test_unknown_status_malformed(mod, monkeypatch, audio):
-    f = Fake(status_body={"id": TID, "status": "weird"})
-    out = _stt(mod, f, monkeypatch).transcribe(audio)
-    assert out["success"] is False and "unexpected" in out["error"].lower()
+def test_unknown_status_keeps_polling_until_timeout(mod, monkeypatch, audio):
+    f = Fake(status_body={"id": TID, "status": "downloading"})
+    out = _stt(mod, f, monkeypatch, poll_timeout=20).transcribe(audio)
+    assert out["success"] is False and "timed out" in out["error"]
+    assert f.calls.count(f"GET /v1/transcriptions/{TID}") > 2
     assert f"DELETE /v1/files/{FID}" in f.calls
 
 
@@ -205,3 +206,11 @@ def test_unexpected_exception_never_raises(mod, monkeypatch, audio):
     monkeypatch.setattr(mod.providers, "SonioxClient", lambda **kw: 1 / 0)
     out = p.transcribe(audio)
     assert out["success"] is False and out["provider"] == "soniox"
+
+
+def test_unicode_filename_upload(mod, monkeypatch, tmp_path):
+    audio = tmp_path / "录音 café.wav"
+    audio.write_bytes(b"AUDIO-BYTES")
+    f = Fake()
+    out = _stt(mod, f, monkeypatch).transcribe(str(audio))
+    assert out["success"] is True, out

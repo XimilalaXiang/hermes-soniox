@@ -61,6 +61,8 @@ class SonioxClient:
             raise SonioxError(f"Soniox {op} request timed out") from None
         except httpx.HTTPError as exc:
             raise SonioxError(f"Soniox {op} request failed ({type(exc).__name__})") from None
+        except UnicodeError:  # e.g. non-ASCII key in the header; the exception text would echo it
+            raise SonioxError(f"Soniox {op} request failed (invalid API key characters)") from None
         if resp.status_code >= 400:
             raise SonioxError(self._http_error(op, resp))
         return resp
@@ -121,7 +123,7 @@ class SonioxClient:
         return value
 
     def wait_for_completion(self, transcription_id: str) -> None:
-        """Poll until ``completed``; raise on ``error``, unknown status, or timeout."""
+        """Poll until ``completed``; raise on ``error`` or timeout."""
         start = self._monotonic()
         interval = self.poll_initial
         while True:
@@ -137,8 +139,8 @@ class SonioxClient:
                 raise SonioxError(self._redact(
                     "Soniox transcription failed" + (f" ({detail})" if detail else "")
                 )[:_MAX_ERROR_CHARS])
-            if status not in ("queued", "processing"):
-                raise SonioxError("Soniox transcription returned an unexpected status")
+            # Documented non-terminal statuses are queued/processing; any other value is treated as
+            # still in flight so the poll stays bounded by poll_timeout instead of failing early.
             remaining = self.poll_timeout - (self._monotonic() - start)
             if remaining <= 0:
                 raise SonioxError(f"Soniox transcription timed out after {self.poll_timeout:g}s")

@@ -41,14 +41,14 @@ _FORMAT_MAP = {"mp3": "mp3", "wav": "wav", "flac": "flac", "opus": "opus", "ogg"
 
 _SETUP_ENV = [{"key": API_KEY_ENV, "prompt": "Soniox API key", "url": "https://console.soniox.com"}]
 
-# Voice ids documented by Soniox plus the plugin default; the live list is at GET /v1/tts-models.
+# Voices named in Soniox docs/examples plus the requested plugin default (Meilin, which the docs do not
+# list). The authoritative per-model list is GET /v1/tts-models.
 _VOICES = [
     {"id": "Meilin", "display": "Meilin"},
     {"id": "Adrian", "display": "Adrian"},
     {"id": "Daniel", "display": "Daniel"},
     {"id": "Maya", "display": "Maya"},
     {"id": "Noah", "display": "Noah"},
-    {"id": "Meera", "display": "Meera"},
 ]
 
 
