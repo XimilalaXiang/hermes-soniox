@@ -3,8 +3,9 @@
 from __future__ import annotations
 
 import logging
-import os
 from typing import Any
+
+from agent.secret_scope import get_secret
 
 logger = logging.getLogger(__name__)
 
@@ -12,8 +13,9 @@ API_KEY_ENV = "SONIOX_API_KEY"
 
 
 def get_api_key() -> str | None:
-    """The Soniox key from the environment only (never from config files)."""
-    key = os.environ.get(API_KEY_ENV, "").strip()
+    """Resolve the active profile's Soniox key through Hermes' secret scope."""
+    value = get_secret(API_KEY_ENV, "")
+    key = value.strip() if isinstance(value, str) else ""
     return key or None
 
 

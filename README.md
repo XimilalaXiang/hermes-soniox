@@ -3,7 +3,9 @@
 Native **BYOK** [Soniox](https://soniox.com) text-to-speech and speech-to-text for
 [Hermes Agent](https://github.com/NousResearch/hermes-agent). Provider id: `soniox` (both TTS and STT).
 It calls Soniox directly with your own `SONIOX_API_KEY` — no proxy, no gateway, no third-party middleman.
-Only Hermes-bundled `httpx` and the standard library are used.
+STT auto-detects language by default; TTS defaults to English with `Adrian` and can be configured for every
+language and voice exposed by the selected Soniox model. The plugin uses only Hermes-bundled `httpx` plus the
+standard library.
 
 ## Install
 
@@ -23,10 +25,11 @@ SONIOX_API_KEY=your-soniox-key
 | Feature | Destination | Data sent |
 |---|---|---|
 | TTS | `POST https://tts-rt.soniox.com/tts` | reply text, model, voice, language, format, speed |
-| STT | `https://api.soniox.com/v1` (`/files`, `/transcriptions`) | the audio file, language hint, optional prompt text |
+| STT | `https://api.soniox.com/v1` (`/files`, `/transcriptions`) | the audio file, optional language hints and prompt text |
 
-The key is sent only as an `Authorization: Bearer` header to those two Soniox hosts. It is read from the
-environment on each call, never written to config, returned, logged, or included in error messages.
+The key is sent only as an `Authorization: Bearer` header to those two Soniox hosts. It is resolved through
+Hermes' active-profile secret scope on each call, never written to `config.yaml`, returned, logged, or included
+in error messages. This keeps credentials isolated when one gateway serves multiple Hermes profiles.
 After each transcription the plugin deletes the remote transcription and the uploaded file (best effort).
 Soniox's own retention and billing terms apply to anything you send.
 
@@ -36,23 +39,42 @@ Soniox's own retention and billing terms apply to anything you send.
 tts:
   provider: soniox
   model: tts-rt-v2      # optional; non-"tts-*" values are ignored
-  voice: Meilin         # optional
+  voice: Adrian         # optional; any voice id from GET /v1/tts-models
   soniox:
-    language: zh        # optional, default zh
+    language: en        # optional, default en
 stt:
   enabled: true
   provider: soniox
   soniox:
     model: stt-async-v5 # optional
-    language: zh        # optional, default zh
+    # language: en      # optional hint; omit for automatic language detection
 ```
 
-Defaults: TTS model `tts-rt-v2`, language `zh`, voice `Meilin`; STT model `stt-async-v5`, language `zh`.
+Defaults: TTS model `tts-rt-v2`, language `en`, voice `Adrian`; STT model `stt-async-v5` with automatic
+language detection. Nothing restricts the plugin to English: set any model-supported language and voice.
+
+### Chinese preset
+
+```yaml
+tts:
+  provider: soniox
+  model: tts-rt-v2
+  voice: Meilin
+  soniox:
+    language: zh
+stt:
+  enabled: true
+  provider: soniox
+  soniox:
+    model: stt-async-v5
+    language: zh
+```
 
 How Hermes passes settings (verified against Hermes v0.22.4): TTS receives `tts.voice`, `tts.model`,
 `tts.speed` and `tts.output_format` from the dispatcher; `tts.soniox.language` is read by the plugin itself.
-STT receives `stt.soniox.model`, and `stt.soniox.language` (falling back to `stt.language`) as the language hint.
-`stt.prompt` is sent to Soniox as `context.text`.
+STT receives `stt.soniox.model`; its optional language hint resolves in this order:
+`stt.soniox.language` → `stt.language` → legacy `HERMES_LOCAL_STT_LANGUAGE` → no hint. With no resolved hint,
+Soniox detects the language. `stt.prompt` is sent as `context.text`.
 
 - **Languages**: BCP-47 values are reduced to the ISO code (`zh-CN` → `zh`). STT accepts a comma-separated
   list (`zh,en`) which is sent as `language_hints`; hints bias recognition, they do not restrict it.
@@ -67,7 +89,7 @@ STT receives `stt.soniox.model`, and `stt.soniox.language` (falling back to `stt
   The provider opts into voice bubbles; Hermes converts to Opus with ffmpeg when needed.
 - **Limits**: TTS text ≤ 5000 characters (the Soniox limit; Hermes may apply its own cap first). STT polls with backoff
   (1s → 5s) for up to 300 s until `completed`/`error`, then fails with a timeout error.
-- Realtime WebSocket TTS/STT is not implemented in 0.1.0.
+- Realtime WebSocket TTS/STT is not implemented in 0.2.0.
 
 ## Testing
 
@@ -79,6 +101,9 @@ uv venv --python 3.14 .venv-test && uv pip install --python .venv-test/bin/pytho
 
 Tests use mocked HTTP only and need no credentials. They import Hermes' provider ABCs from
 `~/.hermes/hermes-agent` (override with `HERMES_AGENT_PATH`).
+
+For catalog admission, validate a clean tracked-files export rather than the development directory: the
+recursive security scanner intentionally sees dependencies inside `.venv-test` as plugin content.
 
 ## Troubleshooting
 

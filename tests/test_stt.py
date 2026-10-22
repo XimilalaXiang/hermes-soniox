@@ -77,7 +77,7 @@ def test_success_lifecycle_and_cleanup(mod, monkeypatch, audio):
     assert f.calls[:2] == ["POST /v1/files", "POST /v1/transcriptions"]
     assert f.calls[-2:] == [f"DELETE /v1/transcriptions/{TID}", f"DELETE /v1/files/{FID}"]
     assert f.calls.count(f"GET /v1/transcriptions/{TID}") == 3
-    assert _create_body(f) == {"model": "stt-async-v5", "file_id": FID, "language_hints": ["zh"]}
+    assert _create_body(f) == {"model": "stt-async-v5", "file_id": FID}
 
 
 def test_model_language_prompt(mod, monkeypatch, audio):

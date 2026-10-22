@@ -1,6 +1,6 @@
 [project]
 name = "hermes-soniox"
-version = "0.1.0"
+version = "0.2.0"
 description = "Native BYOK Soniox TTS and STT providers for Hermes Agent"
 requires-python = ">=3.11"
 license = { text = "MIT" }

@@ -16,6 +16,32 @@ def test_language_hints_multiple(mod):
     assert mod.config.language_hints(None, default="zh") == ["zh"]
 
 
+def test_api_key_uses_hermes_secret_scope(mod):
+    from agent.secret_scope import reset_secret_scope, set_secret_scope
+
+    token = set_secret_scope({"SONIOX_API_KEY": "scoped-test-key"})
+    try:
+        assert mod.config.get_api_key() == "scoped-test-key"
+    finally:
+        reset_secret_scope(token)
+
+
+def test_empty_multiplexed_scope_cannot_use_ambient_key(mod):
+    from agent.secret_scope import (
+        reset_secret_scope,
+        set_multiplex_active,
+        set_secret_scope,
+    )
+
+    set_multiplex_active(True)
+    token = set_secret_scope({})
+    try:
+        assert mod.config.get_api_key() is None
+    finally:
+        reset_secret_scope(token)
+        set_multiplex_active(False)
+
+
 def test_load_section_without_hermes(mod, monkeypatch):
     assert mod.config.load_section("tts") in ({}, mod.config.load_section("tts"))
     monkeypatch.setattr(mod.config, "_load_config", lambda: (_ for _ in ()).throw(RuntimeError("x")))

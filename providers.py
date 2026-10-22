@@ -27,10 +27,9 @@ logger = logging.getLogger(__name__)
 
 PROVIDER_ID = "soniox"
 DEFAULT_TTS_MODEL = "tts-rt-v2"
-DEFAULT_TTS_LANGUAGE = "zh"
-DEFAULT_TTS_VOICE = "Meilin"
+DEFAULT_TTS_LANGUAGE = "en"
+DEFAULT_TTS_VOICE = "Adrian"
 DEFAULT_STT_MODEL = "stt-async-v5"
-DEFAULT_STT_LANGUAGE = "zh"
 
 TTS_MAX_CHARS = 5000
 SPEED_MIN, SPEED_MAX = 0.7, 1.3
@@ -41,14 +40,19 @@ _FORMAT_MAP = {"mp3": "mp3", "wav": "wav", "flac": "flac", "opus": "opus", "ogg"
 
 _SETUP_ENV = [{"key": API_KEY_ENV, "prompt": "Soniox API key", "url": "https://console.soniox.com"}]
 
-# Voices named in Soniox docs/examples plus the requested plugin default (Meilin, which the docs do not
-# list). The authoritative per-model list is GET /v1/tts-models.
+# A diverse discovery shortlist confirmed by GET /v1/tts-models. Any catalog voice id can still be
+# supplied in tts.voice; this list is intentionally not exhaustive.
 _VOICES = [
-    {"id": "Meilin", "display": "Meilin"},
     {"id": "Adrian", "display": "Adrian"},
     {"id": "Daniel", "display": "Daniel"},
-    {"id": "Maya", "display": "Maya"},
-    {"id": "Noah", "display": "Noah"},
+    {"id": "Meilin", "display": "Meilin (Mandarin)"},
+    {"id": "Wei", "display": "Wei (Mandarin)"},
+    {"id": "Aoi", "display": "Aoi (Japanese)"},
+    {"id": "Jiwoo", "display": "Jiwoo (Korean)"},
+    {"id": "Lucia", "display": "Lucia (Spanish)"},
+    {"id": "Priya", "display": "Priya (Indian English)"},
+    {"id": "Camille", "display": "Camille (French)"},
+    {"id": "Annika", "display": "Annika (German)"},
 ]
 
 
@@ -200,11 +204,10 @@ class SonioxTranscriptionProvider(TranscriptionProvider):
             return self._fail("Audio file not found")
 
         stt_cfg = provider_section(load_section("stt"))
-        body: dict[str, Any] = {
-            "model": model or stt_cfg.get("model") or DEFAULT_STT_MODEL,
-            "language_hints": language_hints(language or stt_cfg.get("language"),
-                                             default=DEFAULT_STT_LANGUAGE),
-        }
+        body: dict[str, Any] = {"model": model or stt_cfg.get("model") or DEFAULT_STT_MODEL}
+        hints = language_hints(language or stt_cfg.get("language"))
+        if hints:
+            body["language_hints"] = hints
         if isinstance(prompt, str) and prompt.strip():
             body["context"] = {"text": prompt.strip()[:CONTEXT_MAX_CHARS]}
 

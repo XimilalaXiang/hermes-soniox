@@ -34,8 +34,16 @@ def test_defaults_and_exact_bytes(mod, monkeypatch, tmp_path):
     assert str(req.url) == "https://tts-rt.soniox.com/tts"
     assert req.headers["authorization"] == f"Bearer {FAKE_KEY}"
     body = json.loads(req.content)
-    assert body == {"model": "tts-rt-v2", "language": "zh", "voice": "Meilin",
+    assert body == {"model": "tts-rt-v2", "language": "en", "voice": "Adrian",
                     "audio_format": "mp3", "text": "你好"}
+
+
+def test_explicit_chinese_preset(mod, monkeypatch, tmp_path):
+    h, seen = _capture()
+    p = _provider(mod, h, monkeypatch, {"tts": {"soniox": {"language": "zh"}}})
+    p.synthesize("你好", str(tmp_path / "a.mp3"), voice="Meilin")
+    body = json.loads(seen[0].content)
+    assert body["language"] == "zh" and body["voice"] == "Meilin"
 
 
 def test_config_language_voice_model_speed(mod, monkeypatch, tmp_path):

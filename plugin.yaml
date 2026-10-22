@@ -1,10 +1,10 @@
 manifest_version: 1
 name: hermes-soniox
-version: 0.1.0
+version: 0.2.0
 description: "Native BYOK Soniox text-to-speech and speech-to-text providers for Hermes Agent."
 author: Xiang
 kind: standalone
-requires_hermes: ">=0.20.0"
+requires_hermes: ">=0.22.4"
 requires_env:
   - SONIOX_API_KEY
 provides_tools: []

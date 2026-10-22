@@ -29,7 +29,7 @@ def test_registers_both(pkg):
 
 def test_manifest():
     text = (ROOT / "plugin.yaml").read_text()
-    for needle in ("name: hermes-soniox", "version: 0.1.0", 'requires_hermes: ">=0.20.0"',
+    for needle in ("name: hermes-soniox", "version: 0.2.0", 'requires_hermes: ">=0.22.4"',
                    "SONIOX_API_KEY", "license: MIT", "kind: standalone",
                    "https://github.com/XimilalaXiang/hermes-soniox"):
         assert needle in text
@@ -42,7 +42,7 @@ def test_availability_and_metadata(mod, monkeypatch):
     monkeypatch.delenv("SONIOX_API_KEY")
     assert not p.is_available() and not s.is_available()
     assert p.display_name == s.display_name == "Soniox"
-    assert p.default_model() == "tts-rt-v2" and p.default_voice() == "Meilin"
+    assert p.default_model() == "tts-rt-v2" and p.default_voice() == "Adrian"
     assert s.default_model() == "stt-async-v5"
     assert any(v["id"] == "Meilin" for v in p.list_voices())
     assert s.list_models()[0]["id"] == "stt-async-v5"
