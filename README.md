@@ -56,12 +56,11 @@ STT receives `stt.soniox.model`, and `stt.soniox.language` (falling back to `stt
 
 - **Languages**: BCP-47 values are reduced to the ISO code (`zh-CN` → `zh`). STT accepts a comma-separated
   list (`zh,en`) which is sent as `language_hints`; hints bias recognition, they do not restrict it.
-- **Voices**: Soniox built-in voice names or a cloned voice id. The plugin's catalog is a short static list
-  (`Adrian`, `Daniel`, `Maya`, `Noah` appear in Soniox docs; `Meilin` is the requested plugin default). The
-  Soniox docs examples do **not** list `Meilin`, so it is unconfirmed: if TTS returns HTTP 400, pick a voice
-  from `GET https://api.soniox.com/v1/tts-models` (per-model `voices`) and set `tts.voice`. Any voice speaks any
-  supported language. `tts.voice`/`tts.model` are shared Hermes keys; a stale value from another provider
-  (a non-`tts-*` model is ignored, a voice is not) will be sent as-is.
+- **Voices**: Soniox built-in voice names or a cloned voice id. The plugin's catalog is a short static list;
+  the authenticated `GET https://api.soniox.com/v1/tts-models` catalog confirms that `tts-rt-v2` supports
+  `Meilin` and Chinese (`zh`). Any voice can speak any language supported by the model. `tts.voice`/`tts.model`
+  are shared Hermes keys; a stale value from another provider (a non-`tts-*` model is ignored, a voice is not)
+  will be sent as-is.
 - **Speed**: Hermes allows 0.25–4.0; Soniox accepts 0.7–1.3, so values are clamped into that range.
 - **Formats**: `mp3`, `wav`, `flac` natively; `ogg`/`opus` request Soniox `opus` (saved as `.ogg` if the
   response is an Ogg container, otherwise `.opus`). Unknown formats fall back to `mp3`.
