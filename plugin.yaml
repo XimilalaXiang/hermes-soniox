@@ -1,0 +1,20 @@
+manifest_version: 1
+name: hermes-soniox
+version: 0.1.0
+description: "Native BYOK Soniox text-to-speech and speech-to-text providers for Hermes Agent."
+author: Xiang
+kind: standalone
+requires_hermes: ">=0.20.0"
+requires_env:
+  - SONIOX_API_KEY
+provides_tools: []
+provides_hooks: []
+provides_middleware: []
+license: MIT
+homepage: https://github.com/XimilalaXiang/hermes-soniox
+tags:
+  - speech
+  - tts
+  - stt
+  - voice
+  - soniox
