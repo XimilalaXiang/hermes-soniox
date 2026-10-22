@@ -10,7 +10,7 @@ import pytest
 
 ROOT = Path(__file__).resolve().parents[1]
 PACKAGE = "hermes_soniox_testpkg"
-FAKE_KEY = "sk-test-SECRET-1234567890"
+FAKE_KEY = "FAKE_TEST_KEY_NOT_A_CREDENTIAL_1234567890"
 
 _agent = Path(os.environ.get("HERMES_AGENT_PATH", Path.home() / ".hermes" / "hermes-agent"))
 if (_agent / "agent" / "tts_provider.py").exists() and str(_agent) not in sys.path:
